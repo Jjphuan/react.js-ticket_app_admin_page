@@ -1,4 +1,7 @@
 export const en = {
+    en: "EN",
+    zh: "ZH",
+
     add: "Add",
     search: "Search",
     question: "Question",
@@ -6,5 +9,7 @@ export const en = {
     created_at: "Created At",
     updated_at: "Updated At",
     id: "ID",
-    is_show: "Show"
+    is_show: "Show",
+    selected: "Selected",
+    common_question: "Common Questions"
 }

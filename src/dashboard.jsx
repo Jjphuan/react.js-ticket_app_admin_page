@@ -1,10 +1,14 @@
-import { List, styled } from "@mui/material";
+import { FormControl, FormHelperText, List, MenuItem, Select, styled } from "@mui/material";
 import { useState } from "react";
 import DashboardDropDown from "./components/dashboard_dropbar";
 import { Outlet } from "react-router-dom";
+import { useLocalization } from "./context/LocalizationContext";
 
 export default function Dashboard(){
     const [openDropdownIndex, setOpenDropdownIndex] = useState(null); 
+    const { strings, changeLanguage } = useLocalization();
+    const [key, setKey] = useState(0);
+    const [lang, setLang] = useState('en');
 
     const StyledList = styled(List)(({ theme }) => ({
         width: '100%',
@@ -37,9 +41,19 @@ export default function Dashboard(){
         }
       ];
 
+      function changeLang(lang){
+        changeLanguage(lang);
+        setKey(prev => prev + 1); 
+      }
+
+      const handleChange = (event) => {
+        setLang(event.target.value);
+        changeLang(event.target.value);
+      };
+
     return (
-        <div className="flex h-lvh">
-            <div className="w-1/5 bg-black text-white">
+        <div className="flex min-h-screen">
+            <div className="w-1/5 bg-black text-white h-auto">
                 <h1 className="w-full flex justify-center mt-4 mb-16">Ticket App Admin Page</h1>
                 <StyledList
                     component="nav"
@@ -56,11 +70,26 @@ export default function Dashboard(){
                         ))}
                 </StyledList> 
             </div>
-            <div className="w-full h-full">
-                <div className="w-full h-1/10 bg-blue-400">
-
+            <div className="w-full flex flex-1 flex-col">
+                <div className="w-full h-16 bg-blue-400 flex justify-end items-center">
+                  <FormControl 
+                    sx={{ m: 2, minWidth: 80,background: "white",borderRadius: "4px"}} 
+                    size="small"
+                  >
+                    <Select
+                      value={lang}
+                      onChange={handleChange}
+                      displayEmpty
+                      inputProps={{'aria-label': 'Without label' }}
+                    >
+                      <MenuItem value='en'>{strings.en}</MenuItem>
+                      <MenuItem value='zh'>{strings.zh}</MenuItem>
+                    </Select>
+                  </FormControl>
                 </div>
-                <Outlet />
+                <div className="flex-1">
+                  <Outlet key={key}/>
+                </div>
             </div>
         </div>
     )
