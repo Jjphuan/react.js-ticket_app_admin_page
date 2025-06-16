@@ -11,5 +11,14 @@ export const zh = {
     id: "编号",
     is_show: "显示",
     selected: "选择",
-    common_question: "常见问题"
+    common_question: "常见问题",
+    add_common_question: "添加常见问题",
+    edit_common_question: "编辑常见问题",
+    submit: "提交",
+    close: "关闭",
+    all_field_required: "请填写所有必填项.",
+    success: "操作成功",
+    edit: "编辑",
+    yes: "是",
+    no: "否",
 }

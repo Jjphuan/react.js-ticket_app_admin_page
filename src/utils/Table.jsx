@@ -1,6 +1,6 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { alpha } from '@mui/material/styles';
+import { alpha, styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -57,7 +57,7 @@ function EnhancedTableHead(props) {
             checked={rowCount > 0 && numSelected === rowCount}
             onChange={onSelectAllClick}
             slotProps={{
-              'aria-label': 'select all desserts',
+              'aria-label': 'select all',
             }}
           />
         </TableCell>
@@ -100,7 +100,7 @@ EnhancedTableHead.propTypes = {
 };
 
 function EnhancedTableToolbar(props) {
-  const { numSelected, title } = props;
+  const { numSelected, title, handleDelete } = props;
   return (
     <Toolbar
       sx={[
@@ -136,7 +136,7 @@ function EnhancedTableToolbar(props) {
       {numSelected > 0 ? (
         <Tooltip title="Delete">
           <IconButton>
-            <DeleteIcon />
+            <DeleteIcon onClick={() => handleDelete()}/>
           </IconButton>
         </Tooltip>
       ) : (
@@ -154,12 +154,36 @@ EnhancedTableToolbar.propTypes = {
   numSelected: PropTypes.number.isRequired,
 };
 
-export default function EnhancedTable({headCells, data, title}) {
+const AndroidSwitch = styled(Switch)(({ theme }) => ({
+  padding: 8,
+  '& .MuiSwitch-track': {
+    borderRadius: 22 / 2,
+    '&::before, &::after': {
+      content: '""',
+      position: 'absolute',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      width: 16,
+      height: 16,
+    },
+  },
+  '& .MuiSwitch-thumb': {
+    boxShadow: 'none',
+    width: 16,
+    height: 16,
+    margin: 2,
+  },
+}));
+
+export default function EnhancedTable({
+  headCells, data, title, handleEdit, handleShow, handleDelete}
+) {
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('calories');
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [isShow, setIsShow] = React.useState([]);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -204,6 +228,11 @@ export default function EnhancedTable({headCells, data, title}) {
     setPage(0);
   };
 
+  const handleSwitch = (e, id) => {
+   
+    handleShow(e,id);
+  }
+
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - data.length) : 0;
@@ -219,7 +248,11 @@ export default function EnhancedTable({headCells, data, title}) {
   return (
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
-        <EnhancedTableToolbar numSelected={selected.length} title={title}/>
+        <EnhancedTableToolbar 
+          numSelected={selected.length} 
+          title={title} 
+          handleDelete={() => handleDelete(selected)}
+        />
         <TableContainer>
           <Table
             sx={{ minWidth: 750 }}
@@ -243,7 +276,7 @@ export default function EnhancedTable({headCells, data, title}) {
                 return (
                   <TableRow
                     hover
-                    onClick={(event) => handleClick(event, row.id)}
+                    // onClick={(event) => handleClick(event, row.id)}
                     role="checkbox"
                     aria-checked={isItemSelected}
                     tabIndex={-1}
@@ -255,6 +288,7 @@ export default function EnhancedTable({headCells, data, title}) {
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
+                        onClick={(event) => handleClick(event, row.id)}
                         slotProps={{
                           'aria-labelledby': labelId,
                         }}
@@ -262,9 +296,24 @@ export default function EnhancedTable({headCells, data, title}) {
                     </TableCell>
                     {Object.entries(row).map(([key, value]) =>
                       typeof value !== 'object' ? (
+                        key == 'show' ? 
+                        <TableCell key={key} align="right">
+                          <AndroidSwitch checked={row.show} onClick={(e) => handleSwitch(e.target.checked,row.id)}/>
+                          {value ? strings.yes : strings.no}
+                        </TableCell>:
                         <TableCell key={key} align={key == 'id' ?"left" : "right"}>{value}</TableCell>
                       ) : null
                     )}
+                    <TableCell padding="checkbox" sx={{width: "15rem"}}>
+                      <button 
+                        type="button"
+                        className="py-1.5 px-2.5 bg-green-500 mx-1 rounded-xs
+                               cursor-pointer hover:bg-green-400"
+                        onClick={() => handleEdit(row.id)}
+                      >
+                        {strings.edit}
+                      </button>
+                    </TableCell>
                   </TableRow>
                 );
               })}

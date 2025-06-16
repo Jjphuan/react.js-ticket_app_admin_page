@@ -1,6 +1,6 @@
 export const en = {
-    en: "EN",
-    zh: "ZH",
+    en: "English",
+    zh: "Chinese",
 
     add: "Add",
     search: "Search",
@@ -11,5 +11,14 @@ export const en = {
     id: "ID",
     is_show: "Show",
     selected: "Selected",
-    common_question: "Common Questions"
+    common_question: "Common Questions",
+    add_common_question: "Add Common Question",
+    edit_common_question: "Edit Common Question",
+    submit: "Submit",
+    close: "Close",
+    all_field_required: "All field required.",
+    success: "Success",
+    edit: "Edit",
+    yes: "Yes",
+    no: "No",
 }

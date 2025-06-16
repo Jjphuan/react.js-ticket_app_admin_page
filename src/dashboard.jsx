@@ -8,7 +8,7 @@ export default function Dashboard(){
     const [openDropdownIndex, setOpenDropdownIndex] = useState(null); 
     const { strings, changeLanguage } = useLocalization();
     const [key, setKey] = useState(0);
-    const [lang, setLang] = useState('en');
+    const [lang, setLang] = useState(localStorage.getItem('language') || 'en');
 
     const StyledList = styled(List)(({ theme }) => ({
         width: '100%',
