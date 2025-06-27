@@ -27,16 +27,27 @@ export default function Dashboard(){
 
       const dropdownItems = [
         {
-          title: 'Users',
+          title: strings.users,
           subList: [
             { name: 'User List', route: '/user' },
-            { name: 'Add User', route: '/user' }
           ]
         },
         {
-          title: 'Questions',
+          title: strings.question,
           subList: [
             { name: 'Question List', route: '/question' }
+          ]
+        },
+        {
+          title: strings.discount,
+          subList: [
+            { name: strings.discount, route: '/discount' }
+          ]
+        },
+        {
+          title: strings.tickets,
+          subList: [
+            { name: strings.all_ticket, route: '/tickets' }
           ]
         }
       ];

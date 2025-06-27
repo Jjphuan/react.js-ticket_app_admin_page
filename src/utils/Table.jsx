@@ -233,6 +233,41 @@ export default function EnhancedTable({
     handleShow(e,id);
   }
 
+  const handleColumnDisplay = (row,key, value) => {
+    switch (key) {
+      case 'show':
+        return (
+          <TableCell key={key} align="right">
+            <AndroidSwitch 
+              checked={row.show} 
+              onClick={(e) => handleSwitch(e.target.checked, row.id)}
+            />
+            {value ? strings.yes : strings.no}
+          </TableCell>
+        );
+      case 'time':
+        return (
+          <TableCell key={key} align="right">
+            {strings.departure_time} : <br/>{value?.departure} <br/>
+            {strings.arrived_time} : <br/>{value?.arrived_time}
+          </TableCell>
+        );
+      case 'journey':
+        return (
+          <TableCell key={key} align="right">
+            {strings.departure_from} : <br/>{value?.from} <br/>
+            {strings.destination} : <br/>{value?.to}
+          </TableCell>
+        );
+        default:
+          return (
+          <TableCell key={key} align={key === 'id' ? "left" : "right"}>
+            {value}
+          </TableCell>
+        );
+      }
+  }
+
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - data.length) : 0;
@@ -280,7 +315,7 @@ export default function EnhancedTable({
                     role="checkbox"
                     aria-checked={isItemSelected}
                     tabIndex={-1}
-                    key={row.id}
+                    key={`${index} check`}
                     selected={isItemSelected}
                     sx={{ cursor: 'pointer' }}
                   >
@@ -295,16 +330,9 @@ export default function EnhancedTable({
                       />
                     </TableCell>
                     {Object.entries(row).map(([key, value]) =>
-                      typeof value !== 'object' ? (
-                        key == 'show' ? 
-                        <TableCell key={key} align="right">
-                          <AndroidSwitch checked={row.show} onClick={(e) => handleSwitch(e.target.checked,row.id)}/>
-                          {value ? strings.yes : strings.no}
-                        </TableCell>:
-                        <TableCell key={key} align={key == 'id' ?"left" : "right"}>{value}</TableCell>
-                      ) : null
+                      handleColumnDisplay(row,key,value)
                     )}
-                    <TableCell padding="checkbox" sx={{width: "15rem"}}>
+                    <TableCell padding="checkbox" sx={{width: "15rem", paddingLeft: '25px'}}>
                       <button 
                         type="button"
                         className="py-1.5 px-2.5 bg-green-500 mx-1 rounded-xs

@@ -12,7 +12,7 @@ export const GetMethod = (api,queryParameter = {}) => {
       },
       data: queryParameter,
       success: function(response) {
-        console.log(response);
+        // console.log(response);
       }
     });
   };

@@ -1,13 +1,20 @@
 import { Alert, Box, Dialog, DialogTitle,Tab,Tabs,TextField } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import EnhancedTable from "../../utils/Table";
-import strings from "../../lib/localization";
 import { useLocalization } from "../../context/LocalizationContext";
 import { GetMethod, PostMethod } from "../../lib/api_method/method";
 import { Endpoint } from "../../lib/api/api";
-import $ from 'jquery';
+import { DateTimePicker } from "@mui/x-date-pickers";
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import dayjs from "dayjs";
 
-export default function Question(props){
+export default function Discount(props){
+    const today = new Date();
+    const formattedDateTime = `${today.getFullYear()}-${
+      (today.getMonth() + 1).toString().padStart(2, '0')
+    }-${today.getDate().toString().padStart(2, '0')} ${today.getHours()}:${today.getMinutes()}`;
+
     const [title,setTitle] = useState('');
     const { language,strings, changeLanguage } = useLocalization();
     const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
@@ -23,12 +30,15 @@ export default function Question(props){
     const [apiResponse,setApiResponse] = useState('');
     const [dialogError,setDialogError] = useState(false);
     const [alert,setAlert] = useState(false);
+    const [now, setNow] = useState(dayjs(''));
+    const [date, setDate] = useState(dayjs(''));
 
-    const [questionID, setQuestionID] = useState(0);
-    const [questionCN, setquestionCN] = useState('');
-    const [questionEN, setquestionEN] = useState("");
-    const [answersCN, setanswersCN] = useState('');
-    const [answersEN, setanswersEN] = useState('');
+    const [discountID, setDiscountID] = useState(0);
+    const [descCN, setDescCN] = useState('');
+    const [descEN, setDescEN] = useState("");
+    const [titleCN, setTitleCN] = useState('');
+    const [titleEN, setTitleEN] = useState('');
+
     
     const headCells = [
       {
@@ -38,16 +48,16 @@ export default function Question(props){
         label: strings.id,
       },
       {
-        id: 'question',
+        id: 'title',
         numeric: true,
         disablePadding: false,
-        label: strings.question,
+        label: strings.title,
       },
       {
-        id: 'answers',
+        id: 'description',
         numeric: true,
         disablePadding: false,
-        label: strings.answers,
+        label: strings.description,
       },
       {
         id: 'created_at',
@@ -56,27 +66,21 @@ export default function Question(props){
         label: strings.created_at,
       },
       {
-        id: 'updated_at',
+        id: 'expired_at',
         numeric: true,
         disablePadding: true,
-        label: strings.updated_at,
-      },
-      {
-        id: 'protein',
-        numeric: true,
-        disablePadding: true,
-        label: strings.is_show,
-      },
+        label: strings.expired_at,
+      }
     ];
 
     useEffect(() => {
       setLoading(true)
       GetMethod(
-        Endpoint.common_question
+        Endpoint.all_discount
       )
       .then(response => {
         if(response.success){
-          setData(response.message);
+          setData(response.data);
           setLoading(false);
         }
       })
@@ -88,6 +92,10 @@ export default function Question(props){
 
     const handleOpenDialog = () => {
       setOpen(true);
+      const formattedDateTime = `${today.getFullYear()}-${
+        (today.getMonth() + 1).toString().padStart(2, '0')
+      }-${today.getDate().toString().padStart(2, '0')} ${today.getHours()}:${today.getMinutes()}`;
+      setNow(dayjs(formattedDateTime));
     };
   
     const handleCloseDialog = () => {
@@ -101,37 +109,38 @@ export default function Question(props){
     
     const openEditDialog = (id) => {
       setOpenEdit(true);
-      getQuestionDetails(id);
+      getDiscountDetails(id);
     }
 
-    const submitQuestion = (e) => {
+    const submitForm = (e) => {
       e.preventDefault();
 
-      if(questionCN != '' &&
-        answersCN != '' &&
-        questionEN != '' &&
-        answersEN != ''
+      if(titleEN != '' &&
+        descEN != '' &&
+        titleCN != '' &&
+        descCN != ''
       ){
         PostMethod(
-          Endpoint.add_question,
+          Endpoint.add_discount,
           {
+            expired_at: date.toString(),
             en:{
-              questionEN: questionEN,
-              answersEN: answersEN,
+              title: titleEN,
+              description: descEN,
             },
             zh:{
-              questionCN: questionCN,
-              answersCN: answersCN,
+              title: titleCN,
+              description: descCN,
             }
           }
         ).then(response=>{
           if(response.success){
             setApiResponse(response)
             setOpen(false);
-            setquestionCN('');
-            setquestionEN('');
-            setanswersCN('');
-            setanswersEN('');
+            setTitleCN('');
+            setTitleEN('');
+            setDescCN('');
+            setDescEN('');
             setValue(0);
             setAlert(true);
           }
@@ -139,7 +148,6 @@ export default function Question(props){
             setAlert(false);
             location.reload();
           }, 1000);
-          
           
         }).catch(error => {
           console.error('Error fetching data:', error);
@@ -152,21 +160,24 @@ export default function Question(props){
       }
     }
 
-    const getQuestionDetails = (id) => {
+    const getDiscountDetails = (id) => {
 
       GetMethod(
-        Endpoint.get_question,
-        {question_id: id}
+        Endpoint.get_discount,
+        {
+          discount_id: id
+        }
       ).then(response => {
         if(response.success){
           let en = response.data.en;
           let zh = response.data.zh;
 
-          setquestionEN(en.title);
-          setanswersEN(en.answers);
-          setquestionCN(zh.title);
-          setanswersCN(zh.answers);
-          setQuestionID(en.question_id);
+          setTitleEN(en.name);
+          setDescEN(en.description);
+          setTitleCN(zh.name);
+          setDescCN(zh.description);
+          setDate(dayjs(response.data.expired_at));
+          setDiscountID(id);
         }
       });
     }
@@ -174,25 +185,26 @@ export default function Question(props){
     const editQuestion = (e) => {
       e.preventDefault();
 
-      if(questionCN != '' &&
-        answersCN != '' &&
-        questionEN != '' &&
-        answersEN != ''
+      if(descCN != '' &&
+        descEN != '' &&
+        descCN != '' &&
+        descEN != ''
       ){
         PostMethod(
-          Endpoint.edit_question,
+          Endpoint.edit_discount,
           {
-            questionID: questionID,
+            discount_id: discountID,
             en:{
-              question: questionEN,
-              answers: answersEN,
+              name: titleEN,
+              description: descEN,
             },
             zh:{
-              question: questionCN,
-              answers: answersCN,
+              name: titleCN,
+              description: descCN,
             }
           }
-        ).then(response=>{
+        ).then(response => {
+
           if(response.success){
             setAlert(true);
             setOpenEdit(false);
@@ -304,16 +316,26 @@ export default function Question(props){
                 <EnhancedTable 
                   headCells={headCells}
                   data={data}
-                  title={strings.common_question}
+                  title={strings.discount}
                   handleEdit={(id) => openEditDialog(id)}
                   handleShow={(show,id) => handleShow(show,id)}
                   handleDelete={(selected) => handleDelete(selected)}
                 />
             }
             </div>
+            {/* add dialog */}
             <Dialog open={open} onClose={handleCloseDialog} keepMounted={true}>
               <div className="mx-3.5 p-4">
-                <DialogTitle>{strings.add_common_question}</DialogTitle>
+                <DialogTitle>{strings.add_discount}</DialogTitle>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DateTimePicker 
+                      format="DD/MM/YYYY H:m"
+                      minDate={now}
+                      label={strings.expired_at} 
+                      value={date}
+                      onChange={(newDate) => setDate(newDate)}
+                    />
+                </LocalizationProvider>
                 <Box
                   component="form"
                   sx={{ '& .MuiTextField-root': { width: '25ch' } }}
@@ -337,33 +359,34 @@ export default function Question(props){
                     }}
                     >
                      {strings.all_field_required}
-                   </Alert> : <div className="h-6"></div>}
+                   </Alert> : <div className="h-6"></div>
+                   }
                   {/* english */}
                     <div 
                       className="grid grid-cols-1 w-96"
                       hidden={value !== 0}
-                      id={`simple-tabpanel-${0}`}
-                      aria-labelledby={`simple-tab-${0}`}
+                      id={`simple-tabpanel-0`}
+                      aria-labelledby={`simple-tab-0`}
                     >
-                      <label htmlFor="question">{strings.question}</label>
+                      <label htmlFor="question">{strings.discount}</label>
                       <textarea 
-                        id='questionEN'
+                        id='titleEN'
                         cols="10"
                         rows="5"
-                        value={questionEN}
-                        onChange={(e) => setquestionEN(e.target.value)}
+                        value={titleEN}
+                        onChange={(e) => setTitleEN(e.target.value)}
                         className="border-black border-1 rounded p-1"
                       />
 
                       <div className="h-7"></div>
 
-                      <label htmlFor="answer">{strings.answers}</label>
+                      <label htmlFor="answer">{strings.description}</label>
                       <textarea 
-                        id='answerEN' 
+                        id='descEN' 
                         cols="10" 
                         rows="5"
-                        value={answersEN}
-                        onChange={(e) => setanswersEN(e.target.value)}
+                        value={descEN}
+                        onChange={(e) => setDescEN(e.target.value)}
                         className="border-black border-1 rounded p-1"
                       ></textarea>
                     </div>
@@ -374,25 +397,25 @@ export default function Question(props){
                       id={`simple-tabpanel- `}
                       aria-labelledby={`simple-tab-1`}
                     >
-                      <label htmlFor="question">{strings.question}</label>
+                      <label htmlFor="question">{strings.discount}</label>
                       <textarea 
                         id='questionCN'
                         cols="10"
                         rows="5"
-                        value={questionCN}
-                        onChange={(e) => setquestionCN(e.target.value)}
+                        value={titleCN}
+                        onChange={(e) => setTitleCN(e.target.value)}
                         className="border-black border-1 rounded p-1"
                       />
 
                       <div className="h-7"></div>
 
-                      <label htmlFor="answer">{strings.answers}</label>
+                      <label htmlFor="answer">{strings.description}</label>
                       <textarea 
                         id='answerCN' 
                         cols="10" 
                         rows="5"
-                        value={answersCN}
-                        onChange={(e) => setanswersCN(e.target.value)}
+                        value={descCN}
+                        onChange={(e) => setDescCN(e.target.value)}
                         className="border-black border-1 rounded p-1"
                       ></textarea>
                     </div>
@@ -401,7 +424,7 @@ export default function Question(props){
               <div className="flex px-10 justify-around mb-4">
                 <button 
                   className="px-4 py-2 bg-green-400 rounded-lg cursor-pointer hover:bg-green-300"
-                  onClick={submitQuestion}
+                  onClick={submitForm}
                 >
                   {strings.submit}
                 </button>
@@ -413,9 +436,19 @@ export default function Question(props){
                 </button>
               </div>
             </Dialog>
+            {/* edit dialog */}
             <Dialog open={openEdit} onClose={handleCloseDialog} keepMounted={true}>
               <div className="mx-3.5 p-4">
-                <DialogTitle>{strings.edit_common_question}</DialogTitle>
+                <DialogTitle>{strings.edit_discount}</DialogTitle>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DateTimePicker 
+                      format="DD/MM/YYYY H:m"
+                      minDate={now}
+                      label={strings.expired_at} 
+                      value={date}
+                      onChange={(newDate) => setDate(newDate)}
+                    />
+                </LocalizationProvider>
                 <Box
                   component="form"
                   sx={{ '& .MuiTextField-root': { width: '25ch' } }}
@@ -449,11 +482,11 @@ export default function Question(props){
                     >
                       <label htmlFor="question">{strings.question}</label>
                       <textarea 
-                        id='editQuestionEN'
+                        id='editTitleEN'
                         cols="10"
                         rows="5"
-                        value={questionEN}
-                        onChange={(e) => setquestionEN(e.target.value)}
+                        value={titleEN}
+                        onChange={(e) => setTitleEN(e.target.value)}
                         className="border-black border-1 rounded p-1"
                       />
 
@@ -464,8 +497,8 @@ export default function Question(props){
                         id='editAnswerEN' 
                         cols="10" 
                         rows="5"
-                        value={answersEN}
-                        onChange={(e) => setanswersEN(e.target.value)}
+                        value={descEN}
+                        onChange={(e) => setDescEN(e.target.value)}
                         className="border-black border-1 rounded p-1"
                       ></textarea>
                     </div>
@@ -481,8 +514,8 @@ export default function Question(props){
                         id='editQuestionCN'
                         cols="10"
                         rows="5"
-                        value={questionCN}
-                        onChange={(e) => setquestionCN(e.target.value)}
+                        value={titleCN}
+                        onChange={(e) => setTitleCN(e.target.value)}
                         className="border-black border-1 rounded p-1"
                       />
 
@@ -493,8 +526,8 @@ export default function Question(props){
                         id='editAnswerCN' 
                         cols="10" 
                         rows="5"
-                        value={answersCN}
-                        onChange={(e) => setanswersCN(e.target.value)}
+                        value={descCN}
+                        onChange={(e) => setDescCN(e.target.value)}
                         className="border-black border-1 rounded p-1"
                       ></textarea>
                     </div>
